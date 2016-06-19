@@ -1,4 +1,5 @@
 #!/bin/bash
 
-HERE=$(dirname "${BASH_SOURCE[0]}")
-python "$(dirname "$HERE")/__main__.py" "$@"
+SCRIPTS_DIR=$(dirname "${BASH_SOURCE[0]}")
+PANFIG_DIR=$(dirname "$SCRIPTS_DIR")
+python "$PANFIG_DIR" "$@"
