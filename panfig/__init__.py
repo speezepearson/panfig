@@ -5,6 +5,7 @@ import hashlib
 import importlib
 import subprocess
 import pandocfilters
+from . import errors
 
 _PanfigBlockBase = collections.namedtuple('_PanfigBlockBase', ['identifier', 'classes', 'attributes', 'content'])
 class PanfigBlock(_PanfigBlockBase):
@@ -26,8 +27,10 @@ class PanfigBlock(_PanfigBlockBase):
     elif 'panfig-script' in self.attributes:
       command_format = self.attributes['panfig-script']
       command = command_format.format(block=self, path=path)
-      p = subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, stdin=subprocess.PIPE)
-      p.communicate(self.content.encode())
+      p = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      out, err = p.communicate(self.content.encode())
+      if p.returncode != 0:
+        raise errors.SubprocessFailed(command, out, err, p.returncode)
 
 def sha1(x):
   return hashlib.sha1(x.encode(sys.getfilesystemencoding())).hexdigest()
@@ -41,7 +44,12 @@ def pandoc_filter(key, value, format, meta):
   figure_path = os.path.join('panfig-figures', sha1(str(panfig_block)))
   if not os.path.exists(figure_path):
     os.makedirs('panfig-figures', exist_ok=True)
-    panfig_block.generate_image(path=figure_path)
+    try:
+      panfig_block.generate_image(path=figure_path)
+      if not os.path.exists(figure_path):
+        raise errors.NoFigureProduced()
+    except Exception as e:
+      return pandocfilters.CodeBlock(['', [], []], errors.format_figure_failure(panfig_block, e))
 
   alt_text = pandocfilters.Code(['', [], []], panfig_block.content)
   image = pandocfilters.Image(
