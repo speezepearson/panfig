@@ -31,6 +31,8 @@ class PanfigBlock(_PanfigBlockBase):
       out, err = p.communicate(self.content.encode())
       if p.returncode != 0:
         raise errors.SubprocessFailed(command, out, err, p.returncode)
+      if not os.path.exists(path):
+        raise errors.SubprocessFailed(command, out, err, p.returncode)
 
 def sha1(x):
   return hashlib.sha1(x.encode(sys.getfilesystemencoding())).hexdigest()
