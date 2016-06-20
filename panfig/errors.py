@@ -1,4 +1,5 @@
 import traceback
+import json
 
 class SubprocessFailed(RuntimeError):
   def __init__(self, command, out, err, returncode):
@@ -21,13 +22,7 @@ Exception:
 
 Offending block:
 
-  Identifier: {block.identifier},
-  Classes: {block.classes},
-  Attributes: {block.attributes},
-
-  Content:
-
-{content}
+{pandoc_for_block}
 '''
 
 addendum='''
@@ -40,9 +35,20 @@ Stderr:
 {stderr}'''
 
 
+def make_pandoc_for_block(block):
+  footer = '~' * max((len(line) for line in block.content.split('\n') if all(c=='~' for c in line)), default=8)
+  header = '{footer} {{ {rest} }}'.format(
+    footer=footer,
+    rest=' '.join(
+      (['#'+block.identifier] if block.identifier else []) +
+      ['.'+cls for cls in block.classes] +
+      ['{}={}'.format(k,json.dumps(v)) for k,v in block.attributes.items()]))
+  return '\n'.join([header, block.content, footer])
+
+
 def format_figure_failure(panfig_block, exception):
   result = main_format.format(
-      block=panfig_block,
+      pandoc_for_block=indent(make_pandoc_for_block(panfig_block)),
       content=indent(panfig_block.content, level=2),
       traceback=indent(''.join(traceback.format_exception(exception.__class__, exception, exception.__traceback__))))
 
