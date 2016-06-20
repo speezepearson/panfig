@@ -34,6 +34,27 @@ class PanfigBlock(_PanfigBlockBase):
       if not os.path.exists(path):
         raise errors.SubprocessFailed(command, out, err, p.returncode)
 
+
+  def build_replacement_pandoc_element(self):
+    path = os.path.join('panfig-figures', sha1(str(self)))
+    if not os.path.exists(path):
+      os.makedirs('panfig-figures', exist_ok=True)
+      try:
+        self.generate_image(path=path)
+        if not os.path.exists(path):
+          raise errors.NoFigureProduced()
+      except Exception as e:
+        return pandocfilters.CodeBlock(['', [], []], errors.format_figure_failure(self, e))
+
+    alt_text = pandocfilters.Code(['', [], []], self.content)
+    image = pandocfilters.Image(
+      [self.identifier, self.classes, list(self.attributes.items())],
+      [alt_text],
+      [path, ''])
+    result = pandocfilters.Para([image])
+    return result
+
+
 def sha1(x):
   return hashlib.sha1(x.encode(sys.getfilesystemencoding())).hexdigest()
 
@@ -43,23 +64,4 @@ def pandoc_filter(key, value, format, meta):
   except ValueError:
     return None
 
-  figure_path = os.path.join('panfig-figures', sha1(str(panfig_block)))
-  if not os.path.exists(figure_path):
-    os.makedirs('panfig-figures', exist_ok=True)
-    try:
-      panfig_block.generate_image(path=figure_path)
-      if not os.path.exists(figure_path):
-        raise errors.NoFigureProduced()
-    except Exception as e:
-      return pandocfilters.CodeBlock(['', [], []], errors.format_figure_failure(panfig_block, e))
-
-  alt_text = pandocfilters.Code(['', [], []], panfig_block.content)
-  image = pandocfilters.Image(
-    [panfig_block.identifier, panfig_block.classes, list(panfig_block.attributes.items())],
-    [alt_text],
-    [figure_path, ''])
-  result = pandocfilters.Para([image])
-  return result
-
-
-from . import examples
+  return panfig_block.build_replacement_pandoc_element()
