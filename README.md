@@ -72,7 +72,7 @@ If you get tired of writing the same command over and over, you can use aliases 
 - With aliases:
 
     ```markdown
-    ~~~~~~~~ { .panfig shell="(cat; echo 'Export[$CommandLine[[2]], %]') | MathKernel {path}" }
+    ~~~~~~~~ { .panfig shell="(cat; echo ''; echo 'Export[$CommandLine[[2]], %, \"png\"]') | MathKernel {path}" }
       Plot[Sin[x], {x, 0, 2*Pi}]
     ~~~~~~~~
     ```
@@ -81,7 +81,7 @@ If you get tired of writing the same command over and over, you can use aliases 
 
     ```markdown
     ~~~~~~~~ { .panfig-aliases }
-      {"mma": {"shell": "(cat; echo 'Export[$CommandLine[[2]], %]') | MathKernel {path}"}}
+    {"mma": {"shell": "(cat; echo ''; echo 'Export[$CommandLine[[2]], %, \"png\"]') | MathKernel {path}"}}
     ~~~~~~~~
 
     ~~~~~~~~ { .panfig alias=mma }
