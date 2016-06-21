@@ -56,7 +56,7 @@ class PanfigBlock(_PanfigBlockBase):
     if 'shell' in attributes:
       return cls(identifier=identifier, classes=classes, attributes=attributes, content=content)
     else:
-      raise ParseError('block has shell attribute, or alias giving it one')
+      raise ParseError('block has no shell attribute, or alias giving it one')
 
   def generate_image(self, path):
     command_format = self.attributes['shell']
