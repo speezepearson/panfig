@@ -103,3 +103,6 @@ def pandoc_filter(key, value, format, meta):
       return PanfigBlock.from_pandoc_element(key, value, format, meta).build_replacement_pandoc_element()
   except Exception as exception:
     return errors.make_diagnostic_code_block(key, value, exception)
+
+def main():
+  pandocfilters.toJSONFilter(pandoc_filter)

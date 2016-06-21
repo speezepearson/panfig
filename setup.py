@@ -81,7 +81,7 @@ setup(
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     package_data={
-        'panfig': ['scripts/virtualenv-wrapper.sh'],
+        # 'panfig': ['scripts/virtualenv-wrapper.sh'],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
@@ -93,9 +93,9 @@ setup(
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
-    # entry_points={
-    #     'console_scripts': [
-    #         'sample=sample:main',
-    #     ],
-    # },
+    entry_points={
+        'console_scripts': [
+            'panfig=panfig:main',
+        ],
+    },
 )

