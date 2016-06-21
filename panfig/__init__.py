@@ -82,7 +82,7 @@ class PanfigBlock(_PanfigBlockBase):
       if not os.path.exists(path):
         raise errors.NoFigureProduced()
 
-    alt_text = pandocfilters.Code(['', [], []], self.content)
+    alt_text = pandocfilters.Code(['', [], []], errors.make_pandoc_for_block(self))
     image = pandocfilters.Image(
       [self.identifier, self.classes, list(self.attributes.items())],
       [alt_text],

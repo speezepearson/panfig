@@ -19,17 +19,11 @@ For example, this Markdown code:
       }
     ~~~~~~~~
 
-generates this HTML:
+generates HTML that looks like this:
 
 > Here is a very simple FSM: the "on-off automaton."
 >
-> ~~~~~~~~ {.panfig shell="dot -Tpng -o {path}"}
->   digraph G {
->     on [style=filled];
->     on -> off;
->     off -> on;
->   }
-> ~~~~~~~~
+> ![](on-off.png)
 
 
 
@@ -51,7 +45,7 @@ In general terms: where you want a figure, you write a code block that describes
 
 More specifically: to make a figure, you use Pandoc/Markdown's fenced-code-block syntax to designate a code block as a Panfig block, by giving it the `.panfig` class, and also specifying a shell command that generates the image, like so:
 
-    ~~~~~~~~ { .panfig shell="dot -Tpdf -o {path}" }
+    ~~~~~~~~ { .panfig shell="dot -Tpng -o {path}" }
       digraph G {
         on -> off;
         off -> on;
