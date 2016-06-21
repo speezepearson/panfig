@@ -14,7 +14,19 @@ class NoSuchAliasException(Exception): pass
 _PanfigBlockBase = collections.namedtuple('_PanfigBlockBase', ['identifier', 'classes', 'attributes', 'content'])
 class PanfigBlock(_PanfigBlockBase):
 
-  aliases = {}
+  aliases = {
+    "dot": {"shell": "dot -Tpng -o {path}"},
+    "mathematica": {"shell": '''(
+      cat
+      echo
+      echo 'Export[$CommandLine[[2]], %, "png"]'
+      ) | MathKernel {path}'''},
+    "matplotlib": {"shell": '''(
+        echo 'import sys; from matplotlib import pyplot as plt'
+        python -c 'import sys, inspect;  sys.stdout.write(inspect.cleandoc(sys.stdin.read()))'
+        echo
+        echo 'plt.savefig(sys.argv[1], format="png")'
+        ) | /usr/bin/python - {path}'''}}
   @classmethod
   def is_element_an_alias_block(cls, key, value):
     return key=='CodeBlock' and 'panfig-aliases' in value[0][1]
