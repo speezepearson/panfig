@@ -41,6 +41,8 @@ I am putting this up near the top because you should care.
 How do I use it?
 ----------------
 
+First things, of course, first: `pip install panfig`. (I don't actually have this on PyPI yet, so you'll have to download this and run `python setup.py` yourself.)
+
 In general terms: where you want a figure, you write a code block that describes how to generate an image file. Then you compile the document with `pandoc --filter panfig ...`, and Panfig will generate the image and replace the code block with it.
 
 More specifically: to make a figure, you use Pandoc/Markdown's fenced-code-block syntax to designate a code block as a Panfig block, by giving it the `.panfig` class, and also specifying a shell command that generates the image, like so:
