@@ -75,9 +75,9 @@ class PanfigBlock(_PanfigBlockBase):
 
 
   def build_replacement_pandoc_element(self):
-    path = os.path.join('panfig-figures', sha1(str(self)))
+    path = os.path.join(os.path.expanduser('~'), '.cache', 'panfig', 'figures', sha1(str(self)))
     if not os.path.exists(path):
-      os.makedirs('panfig-figures', exist_ok=True)
+      os.makedirs(os.path.dirname(path), exist_ok=True)
       self.generate_image(path=path)
       if not os.path.exists(path):
         raise errors.NoFigureProduced()
