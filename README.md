@@ -30,7 +30,7 @@ generates HTML that looks like this:
 Security: for God's sake, be careful.
 -------------------------------------
 
-I am putting this here because you should care.
+I am putting this up near the top because you should care.
 **Panfig executes arbitrary code contained in the document being compiled. If you invoked Pandoc (+Panfig) on the following document, it would own your computer.**
 
 
