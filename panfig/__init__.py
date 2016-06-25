@@ -6,6 +6,7 @@ import hashlib
 import subprocess
 import json
 import pandocfilters
+import inspect
 from . import errors
 
 class ParseError(Exception): pass
@@ -15,18 +16,13 @@ _PanfigBlockBase = collections.namedtuple('_PanfigBlockBase', ['identifier', 'cl
 class PanfigBlock(_PanfigBlockBase):
 
   aliases = {
-    "dot": {"shell": "dot -Tpng -o {path}"},
-    "mathematica": {"shell": '''(
-      cat
-      echo
-      echo 'Export[$CommandLine[[2]], %, "png"]'
-      ) | MathKernel {path}'''},
-    "matplotlib": {"shell": '''(
-        echo 'import sys; from matplotlib import pyplot as plt'
-        python -c 'import sys, inspect;  sys.stdout.write(inspect.cleandoc(sys.stdin.read()))'
-        echo
-        echo 'plt.savefig(sys.argv[1], format="png")'
-        ) | /usr/bin/python - {path}'''}}
+    'dot': {'shell': 'dot -Tpng -o {path}'},
+    'mathematica': {'shell': 'MathKernel {path}',
+                    'epilogue': 'Export[$CommandLine[[2]], %, "png"]'},
+    'matplotlib': {'shell': '/usr/bin/python - {path}',
+                   'prologue': 'import sys; from matplotlib import pyplot as plt',
+                   'epilogue': 'plt.savefig(sys.argv[1], format="png")',
+                   'dedent': 'true'}}
   @classmethod
   def is_element_an_alias_block(cls, key, value):
     return key=='CodeBlock' and 'panfig-aliases' in value[0][1]
@@ -52,7 +48,7 @@ class PanfigBlock(_PanfigBlockBase):
     if 'alias' in attributes:
       if attributes['alias'] not in cls.aliases:
         raise NoSuchAliasException(attributes['alias'])
-      attributes.update(cls.aliases[attributes['alias']])
+      attributes = collections.ChainMap(attributes, cls.aliases[attributes['alias']])
     if 'shell' in attributes:
       return cls(identifier=identifier, classes=classes, attributes=attributes, content=content)
     else:
@@ -67,12 +63,20 @@ class PanfigBlock(_PanfigBlockBase):
       stdin=subprocess.PIPE,
       stdout=subprocess.PIPE,
       stderr=subprocess.PIPE)
-    out, err = p.communicate(self.content.encode())
+
+    payload = self.content
+    if self.attributes.get('dedent', 'false') == 'true':
+      payload = inspect.cleandoc(payload)
+    if 'prologue' in self.attributes:
+      payload = '\n'.join([self.attributes['prologue'], payload])
+    if 'epilogue' in self.attributes:
+      payload = '\n'.join([payload, self.attributes['epilogue']])
+
+    out, err = p.communicate(payload.encode())
     if p.returncode != 0:
       raise errors.SubprocessFailed(command, out, err, p.returncode)
     if not os.path.exists(path):
       raise errors.SubprocessFailed(command, out, err, p.returncode)
-
 
   def build_replacement_pandoc_element(self):
     path = os.path.join(os.path.expanduser('~'), '.cache', 'panfig', 'figures', sha1(str(self)))
