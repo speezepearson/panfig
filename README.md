@@ -1,9 +1,9 @@
 Pandoc Figure Framework
 =======================
 
-This library lets you write self-contained Pandoc/Markdown files that contain figures.
+This library lets you write self-contained Pandoc/Markdown files containing figures.
 
-Without Panfig, if you want figures, you have to save the image files, and the scripts that generate them, alongside the document. You'd probably even have a Make system to ensure that all the figures were up to date. What a hassle!
+Without Panfig, if you want figures, you have to save the image files, and the scripts that generate them, alongside the document. You'd probably even have a Makefile or something to ensure that all the figures were up to date. What a hassle!
 
 With Panfig, the document stands alone. It describes how to generate the images, and they're generated when the document is compiled to HTML (or whatever).
 
@@ -54,7 +54,7 @@ More specifically: to make a figure, you use Pandoc/Markdown's fenced-code-block
       }
     ~~~~~~~~
 
-The `sh` attribute, as you see, is a shell command. The contents of the block are piped to its standard input.
+The `shell` attribute, as you see, is a shell command. The contents of the block are piped to its standard input. (The shell command is formatted so that `{path}` is replaced with the `sh`-escaped path to the image file that should be created.)
 
 
 ### Aliases
