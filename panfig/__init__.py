@@ -7,48 +7,27 @@ import subprocess
 import json
 import pandocfilters
 import inspect
-from . import errors
+from . import aliases, errors
 
 class ParseError(Exception): pass
-class NoSuchAliasException(Exception): pass
 
 _PanfigBlockBase = collections.namedtuple('_PanfigBlockBase', ['identifier', 'classes', 'attributes', 'content'])
 class PanfigBlock(_PanfigBlockBase):
-
-  aliases = {
-    'dot': {'shell': 'dot -Tpng -o {path}'},
-    'mathematica': {'shell': 'MathKernel {path}',
-                    'epilogue': 'Export[$CommandLine[[2]], %, "png"]'},
-    'matplotlib': {'shell': '/usr/bin/python - {path}',
-                   'prologue': 'import sys; from matplotlib import pyplot as plt',
-                   'epilogue': 'plt.savefig(sys.argv[1], format="png")',
-                   'dedent': 'true'}}
-  @classmethod
-  def is_element_an_alias_block(cls, key, value):
-    return key=='CodeBlock' and 'panfig-aliases' in value[0][1]
-  @classmethod
-  def add_aliases_from_pandoc_element(cls, key, value):
-    if not cls.is_element_an_alias_block(key, value):
-      raise ParseError('given Pandoc element does not represent a Panfig alias block')
-    (identifier, classes, attributes), content = value
-    attributes = dict(attributes)
-    if 'panfig-aliases' in classes:
-      cls.aliases.update(json.loads(content))
-      return
 
   @classmethod
   def is_element_a_figure_block(cls, key, value):
     return key=='CodeBlock' and 'panfig' in value[0][1]
   @classmethod
-  def from_pandoc_element(cls, key, value):
+  def from_pandoc_element(cls, alias_set, key, value):
     if not cls.is_element_a_figure_block(key, value):
       raise ParseError('given Pandoc element does not represent a Panfig block')
     (identifier, classes, attributes), content = value
     attributes = dict(attributes)
     if 'alias' in attributes:
-      if attributes['alias'] not in cls.aliases:
-        raise NoSuchAliasException(attributes['alias'])
-      attributes = collections.ChainMap(attributes, cls.aliases[attributes['alias']])
+      alias = attributes['alias']
+      if attributes['alias'] not in alias_set:
+        raise aliases.NoSuchAliasException(alias)
+      attributes = collections.ChainMap(attributes, alias_set[alias])
     if 'shell' in attributes:
       return cls(identifier=identifier, classes=classes, attributes=attributes, content=content)
     else:
@@ -98,15 +77,21 @@ class PanfigBlock(_PanfigBlockBase):
 def sha1(x):
   return hashlib.sha1(x.encode(sys.getfilesystemencoding())).hexdigest()
 
-def pandoc_filter(key, value, format, meta):
-  try:
-    if PanfigBlock.is_element_an_alias_block(key, value):
-      PanfigBlock.add_aliases_from_pandoc_element(key, value)
+def transform_pandoc_element(alias_set, key, value):
+  if alias_set.can_be_updated_from_element(key, value):
+    try:
+      alias_set.update_from_element(key, value)
       return pandocfilters.Null()
-    elif PanfigBlock.is_element_a_figure_block(key, value):
-      return PanfigBlock.from_pandoc_element(key, value).build_replacement_pandoc_element()
-  except Exception as exception:
-    return errors.make_diagnostic_code_block(key, value, exception)
+    except Exception as exception:
+      return errors.make_diagnostic_code_block(key, value, exception)
+
+  if PanfigBlock.is_element_a_figure_block(key, value):
+    block  = PanfigBlock.from_pandoc_element(alias_set, key, value)
+    try:
+      return block.build_replacement_pandoc_element()
+    except Exception as exception:
+      return errors.make_diagnostic_code_block(key, value, exception)
 
 def main():
-  pandocfilters.toJSONFilter(pandoc_filter)
+  alias_set = aliases.DEFAULT_ALIASES.copy()
+  pandocfilters.toJSONFilter(lambda key, value, format, meta: transform_pandoc_element(alias_set, key, value))

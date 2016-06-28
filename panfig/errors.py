@@ -21,7 +21,6 @@ def make_pandoc_for_block(block):
 
 def make_pandoc_for_code_block(value):
   (identifier, classes, attributes), content = value
-  attributes = dict(attributes)
 
   fence = '~' * max((len(line) for line in content.split('\n') if all(c=='~' for c in line)), default=8)
   header = '{fence} {{ {rest} }}'.format(
@@ -29,7 +28,7 @@ def make_pandoc_for_code_block(value):
     rest=' '.join(
       (['#'+identifier] if identifier else []) +
       ['.'+cls for cls in classes] +
-      ['{}={}'.format(k,json.dumps(v)) for k,v in attributes.items()]))
+      ['{}={}'.format(k,json.dumps(v)) for k,v in attributes]))
   return '\n'.join([header, content, fence])
 
 
