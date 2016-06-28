@@ -27,7 +27,7 @@ class PanfigBlock(_PanfigBlockBase):
   def is_element_an_alias_block(cls, key, value):
     return key=='CodeBlock' and 'panfig-aliases' in value[0][1]
   @classmethod
-  def add_aliases_from_pandoc_element(cls, key, value, format, meta):
+  def add_aliases_from_pandoc_element(cls, key, value):
     if not cls.is_element_an_alias_block(key, value):
       raise ParseError('given Pandoc element does not represent a Panfig alias block')
     (identifier, classes, attributes), content = value
@@ -40,7 +40,7 @@ class PanfigBlock(_PanfigBlockBase):
   def is_element_a_figure_block(cls, key, value):
     return key=='CodeBlock' and 'panfig' in value[0][1]
   @classmethod
-  def from_pandoc_element(cls, key, value, format, meta):
+  def from_pandoc_element(cls, key, value):
     if not cls.is_element_a_figure_block(key, value):
       raise ParseError('given Pandoc element does not represent a Panfig block')
     (identifier, classes, attributes), content = value
@@ -101,10 +101,10 @@ def sha1(x):
 def pandoc_filter(key, value, format, meta):
   try:
     if PanfigBlock.is_element_an_alias_block(key, value):
-      PanfigBlock.add_aliases_from_pandoc_element(key, value, format, meta)
+      PanfigBlock.add_aliases_from_pandoc_element(key, value)
       return pandocfilters.Null()
     elif PanfigBlock.is_element_a_figure_block(key, value):
-      return PanfigBlock.from_pandoc_element(key, value, format, meta).build_replacement_pandoc_element()
+      return PanfigBlock.from_pandoc_element(key, value).build_replacement_pandoc_element()
   except Exception as exception:
     return errors.make_diagnostic_code_block(key, value, exception)
 
