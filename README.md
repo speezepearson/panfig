@@ -11,7 +11,7 @@ For example, this Markdown code:
 
     Here is a very simple FSM: the "on-off automaton."
 
-    ~~~~~~~~ {.panfig shell="dot -Tpng -o {path}"}
+    ~~~~~~~~ {.panfig shell="dot -Tpng -o %s"}
       digraph G {
         on [style=filled];
         on -> off;
@@ -45,14 +45,14 @@ How do I use it?
 
 2. **Write Markdown.** In your Markdown file, where you want a figure, write a code block that describes how to generate the desired figure. For example:
 
-        ~~~~~~~~ { .panfig shell="dot -Tpng -o {path}" }
+        ~~~~~~~~ { .panfig shell="dot -Tpng -o %s" }
           digraph G {
             on -> off;
             off -> on;
           }
         ~~~~~~~~
 
-    This uses Pandoc's [fenced code block](http://pandoc.org/README.html#fenced-code-blocks) syntax to give the block the `.panfig` class (to flag it for processing by Panfig), and a `shell` attribute specifying the command that will generate the figure. (It's a Python format string, so `{path}` is replaced by the `sh`-escaped path to the image file that should be generated. And if you want a normal `{` you'll need to type `{{`. Sorry.) The shell command is run, with the contents of the code block passed to the subprocess's standard input. It's that simple!
+    This uses Pandoc's [fenced code block](http://pandoc.org/README.html#fenced-code-blocks) syntax to give the block the `.panfig` class (to flag it for processing by Panfig), and a `shell` attribute specifying the command that will generate the figure. (It's a `printf`-style format string, so `%s` is replaced by the `sh`-escaped path to the image file that should be created.) The shell command is run, with the contents of the code block passed to the subprocess's standard input. It's that simple!
 
 3. **Compile the document.** Invoke `pandoc` to compile the document as you normally would, but add the option `--filter panfig`. (If the `panfig` executable isn't on your default path -- for example, if you use Virtualenv -- you may need to pass the full path to the `panfig` executable, e.g. `~/.virtualenv/3.4/bin/panfig`.)
 
@@ -61,10 +61,10 @@ How do I use it?
 
 #### Aliases
 
-An alias specifies a set of attributes that Panfig should pretend a block has. For example, instead of writing `shell="dot -Tpng -o {path}"` for all your graphs, you could instead define an alias, like so:
+An alias specifies a set of attributes that Panfig should pretend a block has. For example, instead of writing `shell="dot -Tpng -o %s"` for all your graphs, you could instead define an alias, like so:
 
         ~~~~~~~~ { .panfig-aliases }
-          {"dot": {"shell": "dot -Tpng -o {path}"}}
+          {"dot": {"shell": "dot -Tpng -o %s"}}
         ~~~~~~~~
 
         ~~~~~~~~ { .panfig alias=dot }
@@ -73,7 +73,7 @@ An alias specifies a set of attributes that Panfig should pretend a block has. F
 
 This is exactly, 100% identical to
 
-        ~~~~~~~~ { .panfig shell="dot -Tpng -o {path}" }
+        ~~~~~~~~ { .panfig shell="dot -Tpng -o %s" }
           digraph G { on -> off; off -> on; }
         ~~~~~~~~
 
@@ -117,7 +117,7 @@ For example:
 
 
         ~~~~~~~~ { .panfig-aliases }
-          {"fsm": {"shell": "dot -Tpng -o {path}",
+          {"fsm": {"shell": "dot -Tpng -o %s",
                    "prologue": "digraph G { _start [shape=\"none\", label=\"\"];",
                    "epilogue": "}"}}
         ~~~~~~~~

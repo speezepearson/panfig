@@ -18,10 +18,10 @@ class AliasSet(dict):
     return AliasSet(super().copy())
 
 DEFAULT_ALIASES = AliasSet(
-  dot={'shell': 'dot -Tpng -o {path}'},
-  mathematica={'shell': 'MathKernel {path}',
+  dot={'shell': 'dot -Tpng -o %s'},
+  mathematica={'shell': 'MathKernel %s',
                'epilogue': 'Export[$CommandLine[[2]], %, "png"]'},
-  matplotlib={'shell': '/usr/bin/python - {path}',
+  matplotlib={'shell': '/usr/bin/python - %s',
               'prologue': 'import sys; from matplotlib import pyplot as plt',
               'epilogue': 'plt.savefig(sys.argv[1], format="png")',
               'dedent': 'true'})

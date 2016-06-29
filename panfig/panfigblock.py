@@ -47,7 +47,7 @@ class PanfigBlock(_PanfigBlockBase):
 
   @property
   def shell_command(self):
-    return self.attributes['shell'].format(path=shlex.quote(self.image_path))
+    return self.attributes['shell'] % shlex.quote(self.image_path)
 
   @property
   def shell_command_payload(self):
