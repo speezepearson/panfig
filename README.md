@@ -30,7 +30,7 @@ generates HTML that looks like this:
 Security: for God's sake, be careful.
 -------------------------------------
 
-I am putting this up near the top because you should care.
+I am putting this up near the top because you should care about it.
 **Panfig executes arbitrary code contained in the document being compiled. If you invoked Pandoc (+Panfig) on the following document, it would own your computer.**
 
 
@@ -41,38 +41,90 @@ I am putting this up near the top because you should care.
 How do I use it?
 ----------------
 
-First things, of course, first: `pip install panfig`. (I don't actually have this on PyPI yet, so you'll have to download this and run `python setup.py` yourself.)
+1. **Install.** First things, of course, first: `pip install panfig`.
 
-In general terms: where you want a figure, you write a code block that describes how to generate an image file. Then you compile the document with `pandoc --filter panfig ...`, and Panfig will generate the image and replace the code block with it.
+2. **Write Markdown.** In your Markdown file, where you want a figure, write a code block that describes how to generate the desired figure. For example:
 
-More specifically: to make a figure, you use Pandoc/Markdown's fenced-code-block syntax to designate a code block as a Panfig block, by giving it the `.panfig` class, and also specifying a shell command that generates the image, like so:
-
-    ~~~~~~~~ { .panfig shell="dot -Tpng -o {path}" }
-      digraph G {
-        on -> off;
-        off -> on;
-      }
-    ~~~~~~~~
-
-The `shell` attribute, as you see, is a shell command. The contents of the block are piped to its standard input. (The shell command is formatted so that `{path}` is replaced with the `sh`-escaped path to the image file that should be created.)
-
-
-### Aliases
-
-If you get tired of writing the same command over and over, you can use aliases to make things more concise. For example:
-
-- Without aliases:
-
-        ~~~~~~~~ { .panfig shell="(cat; echo ''; echo 'Export[$CommandLine[[2]], %, \"png\"]') | MathKernel {path}" }
-          Plot[Sin[x], {x, 0, 2*Pi}]
+        ~~~~~~~~ { .panfig shell="dot -Tpng -o {path}" }
+          digraph G {
+            on -> off;
+            off -> on;
+          }
         ~~~~~~~~
 
-- With aliases:
+    This uses Pandoc's [fenced code block](http://pandoc.org/README.html#fenced-code-blocks) syntax to give the block the `.panfig` class (to flag it for processing by Panfig), and a `shell` attribute specifying the command that will generate the figure. (It's a Python format string, so `{path}` is replaced by the `sh`-escaped path to the image file that should be generated. And if you want a normal `{` you'll need to type `{{`. Sorry.) The shell command is run, with the contents of the code block passed to the subprocess's standard input. It's that simple!
+
+3. **Compile the document.** Invoke `pandoc` to compile the document as you normally would, but add the option `--filter panfig`. (If the `panfig` executable isn't on your default path -- for example, if you use Virtualenv -- you may need to pass the full path to the `panfig` executable, e.g. `~/.virtualenv/3.4/bin/panfig`.)
+
+
+### Bells and Whistles
+
+#### Aliases
+
+An alias specifies a set of attributes that Panfig should pretend a block has. For example, instead of writing `shell="dot -Tpng -o {path}"` for all your graphs, you could instead define an alias, like so:
 
         ~~~~~~~~ { .panfig-aliases }
-        {"mma": {"shell": "(cat; echo ''; echo 'Export[$CommandLine[[2]], %, \"png\"]') | MathKernel {path}"}}
+          {"dot": {"shell": "dot -Tpng -o {path}"}}
         ~~~~~~~~
 
-        ~~~~~~~~ { .panfig alias=mma }
-          Plot[Sin[x], {x, 0, 2*Pi}]
+        ~~~~~~~~ { .panfig alias=dot }
+          digraph G { on -> off; off -> on; }
+        ~~~~~~~~
+
+This is exactly, 100% identical to
+
+        ~~~~~~~~ { .panfig shell="dot -Tpng -o {path}" }
+          digraph G { on -> off; off -> on; }
+        ~~~~~~~~
+
+The body of a `.panfig-aliases` block should be a JSON object of the form `{"alias-name": {"attr": "value", ...}, ...}` -- that is, mapping alias names to objects, which in turn specify the attributes you're using the alias as a shorthand for.
+
+Panfig comes with several aliases predefined:
+
+- `dot`: uses `dot` to generate a PNG, e.g.
+
+        ~~~~~~~~ { .panfig alias=dot }
+          digraph G { on -> off; off -> on; }
+        ~~~~~~~~
+
+- `mathematica` uses Mathematica to generate a PNG, e.g.
+
+        ~~~~~~~~ { .panfig alias=mathematica }
+          Plot[Sin[x], {x, 0, 2 Pi}] (* last result is `Export`ed *)
+        ~~~~~~~~
+
+- `matplotlib` uses Matplotlib to generate a PNG, e.g.
+
+        ~~~~~~~~ { .panfig alias=matplotlib }
+          import numpy as np
+          xs = np.linspace(0, 2*np.pi, 100)
+          plt.plot(xs, np.sin(xs)) # matplotlib.pyplot is already imported as plt
+          # plt.savefig() is called at the end to generate the image
+        ~~~~~~~~
+
+
+#### Text Processing
+
+Often, to avoid code duplication, you'll want to massage the code block's contents in some way. Panfig supports some special attributes that will perform common massaging operations:
+
+- `prologue="..."`: prepends the attribute-value to the block's contents (separated by a newline)
+- `epilogue="..."`: appends the attribute-value to the block's contents (separated by a newline)
+- `dedent=true`: removes an equal amount of whitespace (as much as possible, given that constraint) from the beginning of each line
+
+This is all stuff that you *could* do just by constructing a fancy pipeline in your `shell` command, but... what a pain.
+
+For example:
+
+
+        ~~~~~~~~ { .panfig-aliases }
+          {"fsm": {"shell": "dot -Tpng -o {path}",
+                   "prologue": "digraph G { _start [shape=\"none\", label=\"\"];",
+                   "epilogue": "}"}}
+        ~~~~~~~~
+
+        ~~~~~~~~ {.panfig alias=fsm}
+          _start -> off;
+          on [shape="doublecircle"];
+          on -> off;
+          off -> on;
         ~~~~~~~~
