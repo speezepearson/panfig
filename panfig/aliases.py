@@ -1,3 +1,6 @@
+import json
+from . import errors
+
 class NoSuchAliasException(Exception):
   pass
 
@@ -6,8 +9,8 @@ class AliasSet(dict):
     return key=='CodeBlock' and 'panfig-aliases' in value[0][1]
 
   def update_from_element(self, key, value):
-    if not self.is_element_an_alias_block(key, value):
-      raise ParseError('given Pandoc element does not represent a Panfig alias block')
+    if not self.can_be_updated_from_element(key, value):
+      raise errors.ParseError('given Pandoc element does not represent a Panfig alias block')
     (identifier, classes, attributes), content = value
     self.update(json.loads(content))
 

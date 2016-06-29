@@ -13,6 +13,9 @@ class SubprocessFailed(RuntimeError):
 class NoFigureProduced(RuntimeError):
   pass
 
+class ParseError(Exception):
+  pass
+
 def indent(s, level=1):
   return '\n'.join(level*'  '+line for line in s.split('\n'))
 
