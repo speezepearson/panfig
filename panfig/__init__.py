@@ -33,43 +33,59 @@ class PanfigBlock(_PanfigBlockBase):
     else:
       raise ParseError('block has no shell attribute, or alias giving it one')
 
-  def generate_image(self, path):
-    command_format = self.attributes['shell']
-    command = command_format.format(path=shlex.quote(path))
-    p = subprocess.Popen(
-      command,
+  @property
+  def prologue(self):
+    return self.attributes.get('prologue')
+  @property
+  def epilogue(self):
+    return self.attributes.get('epilogue')
+  @property
+  def image_path(self):
+    return os.path.join(os.path.expanduser('~'), '.cache', 'panfig', 'figures', sha1(str(self)))
+
+  @property
+  def shell_command(self):
+    return self.attributes['shell'].format(path=shlex.quote(self.image_path))
+
+  @property
+  def shell_command_payload(self):
+    sections = []
+    if self.prologue is not None:
+      sections.append(self.prologue)
+    sections.append(inspect.cleandoc(self.content) if self.attributes.get('dedent')=='true' else self.content)
+    if self.epilogue is not None:
+      sections.append(self.epilogue)
+    return '\n'.join(sections)
+
+  def start_subprocess(self):
+    return subprocess.Popen(
+      self.shell_command,
       shell=True,
       stdin=subprocess.PIPE,
       stdout=subprocess.PIPE,
       stderr=subprocess.PIPE)
 
-    payload = self.content
-    if self.attributes.get('dedent', 'false') == 'true':
-      payload = inspect.cleandoc(payload)
-    if 'prologue' in self.attributes:
-      payload = '\n'.join([self.attributes['prologue'], payload])
-    if 'epilogue' in self.attributes:
-      payload = '\n'.join([payload, self.attributes['epilogue']])
+  def generate_image(self):
+    p = self.start_subprocess()
 
-    out, err = p.communicate(payload.encode())
+    out, err = p.communicate(self.shell_command_payload.encode())
     if p.returncode != 0:
       raise errors.SubprocessFailed(command, out, err, p.returncode)
-    if not os.path.exists(path):
+    if not os.path.exists(self.image_path):
       raise errors.SubprocessFailed(command, out, err, p.returncode)
 
   def build_replacement_pandoc_element(self):
-    path = os.path.join(os.path.expanduser('~'), '.cache', 'panfig', 'figures', sha1(str(self)))
-    if not os.path.exists(path):
-      os.makedirs(os.path.dirname(path), exist_ok=True)
-      self.generate_image(path=path)
-      if not os.path.exists(path):
+    if not os.path.exists(self.image_path):
+      os.makedirs(os.path.dirname(self.image_path), exist_ok=True)
+      self.generate_image()
+      if not os.path.exists(self.image_path):
         raise errors.NoFigureProduced()
 
     alt_text = pandocfilters.Code(['', [], []], errors.make_pandoc_for_block(self))
     image = pandocfilters.Image(
       [self.identifier, self.classes, list(self.attributes.items())],
       [alt_text],
-      [path, ''])
+      [self.image_path, ''])
     result = pandocfilters.Para([image])
     return result
 
