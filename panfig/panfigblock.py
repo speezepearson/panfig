@@ -72,9 +72,9 @@ class PanfigBlock(_PanfigBlockBase):
 
     out, err = p.communicate(self.shell_command_payload.encode())
     if p.returncode != 0:
-      raise errors.SubprocessFailed(command, out, err, p.returncode)
+      raise errors.SubprocessFailed(self.shell_command, out, err, p.returncode)
     if not os.path.exists(self.image_path):
-      raise errors.SubprocessFailed(command, out, err, p.returncode)
+      raise errors.SubprocessFailed(self.shell_command, out, err, p.returncode)
 
   def build_replacement_pandoc_element(self):
     if not os.path.exists(self.image_path):
