@@ -46,9 +46,9 @@ def make_diagnostic_code_block(key:str, value:Any, exception:Exception):
     indent('\n'.join(traceback.format_exception(exception.__class__, exception, exception.__traceback__)))]
   if isinstance(exception, SubprocessFailed):
     try: stdout = exception.out.decode()
-    except UnicodeDecodeError: stdout = exception.out
+    except UnicodeDecodeError: stdout = repr(exception.out)
     try: stderr = exception.err.decode()
-    except UnicodeDecodeError: stderr = exception.err
+    except UnicodeDecodeError: stderr = repr(exception.err)
     paragraphs += ['Stdout:', indent(stdout), 'Stderr:', indent(stderr)]
 
   return pandocfilters.CodeBlock(['', [], []], '\n\n'.join(paragraphs))
