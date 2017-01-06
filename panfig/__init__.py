@@ -1,9 +1,12 @@
+from typing import Any
+
 import pandocfilters
 
 from .panfigblock import PanfigBlock
 from . import aliases, errors
 
-def transform_pandoc_element(alias_set, key, value):
+
+def transform_pandoc_element(alias_set:aliases.AliasSet, key:str, value:Any):
   if alias_set.can_be_updated_from_element(key, value):
     try:
       alias_set.update_from_element(key, value)

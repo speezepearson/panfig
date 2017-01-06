@@ -5,22 +5,24 @@ import shlex
 import hashlib
 import subprocess
 import inspect
+from typing import NamedTuple, Sequence, Mapping, Any
 
 import pandocfilters
 
 from . import errors, aliases
+from ._types import PandocCodeBlockType
 
-def sha1(x):
-  return hashlib.sha1(x.encode(sys.getfilesystemencoding())).hexdigest()
+def sha1(s:str) -> str:
+  return hashlib.sha1(s.encode(sys.getfilesystemencoding())).hexdigest()
 
-_PanfigBlockBase = collections.namedtuple('_PanfigBlockBase', ['identifier', 'classes', 'attributes', 'content'])
+_PanfigBlockBase = NamedTuple('_PanfigBlockBase', [('identifier',str), ('classes',Sequence[str]), ('attributes',Mapping[str,str]), ('content',str)])
 class PanfigBlock(_PanfigBlockBase):
 
   @classmethod
-  def is_element_a_figure_block(cls, key, value):
+  def is_element_a_figure_block(cls, key:str, value:Any) -> bool:
     return key=='CodeBlock' and 'panfig' in value[0][1]
   @classmethod
-  def from_pandoc_element(cls, alias_set, key, value):
+  def from_pandoc_element(cls, alias_set:aliases.AliasSet, key:str, value:PandocCodeBlockType) -> 'PanfigBlock':
     if not cls.is_element_a_figure_block(key, value):
       raise ParseError('given Pandoc element does not represent a Panfig block')
     (identifier, classes, attributes), content = value
@@ -36,21 +38,21 @@ class PanfigBlock(_PanfigBlockBase):
       raise ParseError('block has no shell attribute, or alias giving it one')
 
   @property
-  def prologue(self):
+  def prologue(self) -> str:
     return self.attributes.get('prologue')
   @property
-  def epilogue(self):
+  def epilogue(self) -> str:
     return self.attributes.get('epilogue')
   @property
-  def image_path(self):
+  def image_path(self) -> str:
     return os.path.join(os.path.expanduser('~'), '.cache', 'panfig', 'figures', sha1(str(self)))
 
   @property
-  def shell_command(self):
+  def shell_command(self) -> str:
     return self.attributes['shell'] % shlex.quote(self.image_path)
 
   @property
-  def shell_command_payload(self):
+  def shell_command_payload(self) -> str:
     sections = []
     if self.prologue is not None:
       sections.append(self.prologue)

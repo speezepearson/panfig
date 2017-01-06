@@ -1,20 +1,21 @@
 import json
 from . import errors
+from ._types import PandocCodeBlockType
 
 class NoSuchAliasException(Exception):
   pass
 
 class AliasSet(dict):
-  def can_be_updated_from_element(self, key, value):
+  def can_be_updated_from_element(self, key:str, value:PandocCodeBlockType) -> bool:
     return key=='CodeBlock' and 'panfig-aliases' in value[0][1]
 
-  def update_from_element(self, key, value):
+  def update_from_element(self, key:str, value:PandocCodeBlockType) -> bool:
     if not self.can_be_updated_from_element(key, value):
       raise errors.ParseError('given Pandoc element does not represent a Panfig alias block')
     (identifier, classes, attributes), content = value
     self.update(json.loads(content))
 
-  def copy(self):
+  def copy(self) -> 'AliasSet':
     return AliasSet(super().copy())
 
 DEFAULT_ALIASES = AliasSet(
