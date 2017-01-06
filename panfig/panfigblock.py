@@ -45,7 +45,7 @@ class PanfigBlock(_PanfigBlockBase):
     return self.attributes.get('epilogue')
   @property
   def image_path(self) -> str:
-    return os.path.join(os.path.expanduser('~'), '.cache', 'panfig', 'figures', sha1(str(self)))
+    return os.path.join(os.path.expanduser('~'), '.cache', 'panfig', 'figures', sha1(str(self._replace(attributes=collections.OrderedDict(sorted(self.attributes.items()))))))
 
   @property
   def shell_command(self) -> str:
