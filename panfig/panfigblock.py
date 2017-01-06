@@ -24,9 +24,9 @@ class PanfigBlock(_PanfigBlockBase):
   @classmethod
   def from_pandoc_element(cls, alias_set:aliases.AliasSet, key:str, value:PandocCodeBlockType) -> 'PanfigBlock':
     if not cls.is_element_a_figure_block(key, value):
-      raise ParseError('given Pandoc element does not represent a Panfig block')
-    (identifier, classes, attributes), content = value
-    attributes = dict(attributes)
+      raise errors.ParseError('given Pandoc element does not represent a Panfig block')
+    (identifier, classes, attributes_list), content = value
+    attributes = dict(attributes_list)
     if 'alias' in attributes:
       alias = attributes['alias']
       if attributes['alias'] not in alias_set:
@@ -35,7 +35,7 @@ class PanfigBlock(_PanfigBlockBase):
     if 'shell' in attributes:
       return cls(identifier=identifier, classes=classes, attributes=attributes, content=content)
     else:
-      raise ParseError('block has no shell attribute, or alias giving it one')
+      raise errors.ParseError('block has no shell attribute, or alias giving it one')
 
   @property
   def prologue(self) -> str:
@@ -89,6 +89,6 @@ class PanfigBlock(_PanfigBlockBase):
     image = pandocfilters.Image(
       [self.identifier, self.classes, list(self.attributes.items())],
       [alt_text],
-      [self.image_path, ''])
+      [self.image_path, errors.make_pandoc_for_block(self)])
     result = pandocfilters.Para([image])
     return result
