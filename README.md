@@ -27,7 +27,7 @@ generates HTML that looks like this:
 
 
 
-Security: for God's sake, be careful.
+Security: for heaven's sake, be careful.
 -------------------------------------
 
 I am putting this up near the top because you should care about it.
